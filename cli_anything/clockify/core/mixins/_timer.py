@@ -55,15 +55,23 @@ class TimerMixin:
             entity="timer",
         )
 
-    def get_running_timer(self, workspace_id: str, user_id: str) -> Optional[dict]:
+    def get_running_timer(
+        self, workspace_id: str, user_id: str,
+        *, page: Optional[int] = None, page_size: Optional[int] = None,
+    ) -> Optional[dict]:
         """Return the currently running timer entry, or None.
 
         GET /v1/workspaces/{workspaceId}/time-entries/status/in-progress
         """
+        params: dict = {}
+        if page is not None:
+            params["page"] = page
+        if page_size is not None:
+            params["page-size"] = page_size
         try:
             data = self._get(  # type: ignore[attr-defined]
                 f"/workspaces/{workspace_id}/time-entries/status/in-progress",
-                params={"user-id": user_id},
+                params=params or None,
                 entity="running timer",
             )
         except ClockifyAPIError as e:
