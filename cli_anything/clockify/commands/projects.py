@@ -120,8 +120,8 @@ def projects_get(ctx, project_id, hydrated, custom_field_entity_type, expense_li
 @click.option("--public", is_flag=True, help="Make project public")
 @click.option("--billable/--no-billable", default=None, help="Set billable status")
 @click.option("--note", default=None, help="Project note (max 16384 chars)")
-@click.option("--hourly-rate", "hourly_rate", default=None, type=float, help="Hourly rate amount (decimal, e.g. 50.0)")
-@click.option("--cost-rate", "cost_rate", default=None, type=float, help="Cost rate amount (decimal, e.g. 50.0)")
+@click.option("--hourly-rate", "hourly_rate", default=None, type=int, help="Hourly rate in cents (e.g. 5000 = $50.00)")
+@click.option("--cost-rate", "cost_rate", default=None, type=int, help="Cost rate in cents (e.g. 5000 = $50.00)")
 @click.option("--currency", default="USD", help="3-letter ISO currency code, e.g. USD, EUR, GBP")
 @click.option("--estimate-type", default=None, type=click.Choice(["AUTO", "MANUAL"]),
               help="Estimate type")
@@ -182,13 +182,13 @@ def projects_create(ctx, name, color, client, public, billable, note, hourly_rat
 @click.argument("project_id")
 @click.option("--name", default=None)
 @click.option("--color", default=None, help="Hex color code, e.g. #FF0000")
-@click.option("--archived", is_flag=True, default=False)
+@click.option("--archived/--no-archived", default=None, help="Archive or un-archive project")
 @click.option("--billable/--no-billable", default=None, help="Set billable status")
 @click.option("--public/--private", "is_public", default=None, help="Set project visibility")
 @click.option("--client", "client_id", default=None, help="Client ID (24-character Clockify object ID)")
 @click.option("--note", default=None, help="Project note (max 16384 chars)")
-@click.option("--hourly-rate", "hourly_rate", default=None, type=float, help="Hourly rate amount (decimal)")
-@click.option("--cost-rate", "cost_rate", default=None, type=float, help="Cost rate amount (decimal)")
+@click.option("--hourly-rate", "hourly_rate", default=None, type=int, help="Hourly rate in cents (e.g. 5000 = $50.00)")
+@click.option("--cost-rate", "cost_rate", default=None, type=int, help="Cost rate in cents (e.g. 5000 = $50.00)")
 @click.option("--budget-estimate", "budget_estimate", default=None, type=int, help="Budget estimate amount (integer)")
 @click.option("--budget-estimate-reset", "budget_estimate_reset", default=None,
               type=click.Choice(["WEEKLY", "MONTHLY", "YEARLY"]),
@@ -212,8 +212,8 @@ def projects_update(ctx, project_id, name, color, archived, billable, is_public,
         body["name"] = name
     if color:
         body["color"] = color
-    if archived:
-        body["archived"] = True
+    if archived is not None:
+        body["archived"] = archived
     if billable is not None:
         body["billable"] = billable
     if is_public is not None:

@@ -175,13 +175,13 @@ def test_projects_create_hourly_rate(runner):
 
     result = _invoke(runner, [
         "projects", "create", "Billable Project",
-        "--hourly-rate", "75.0",
+        "--hourly-rate", "7500",
         "--currency", "EUR",
         "--json",
     ])
     assert result.exit_code == 0, result.output
     sent = json.loads(responses.calls[-1].request.body)
-    assert sent["hourlyRate"] == {"amount": 75.0, "currency": "EUR"}
+    assert sent["hourlyRate"] == {"amount": 7500, "currency": "EUR"}
 
 
 # ── A4: projects update --billable --public --client --note ───────────
