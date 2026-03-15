@@ -71,11 +71,33 @@ All tests pass as of 2026-03-15 after Round 4 (Code Quality & Enterprise Hardeni
 - Added `@responses.activate` to 9 tests that were missing it (7 enum + 2 backend tests)
 - Changed manifest assertion from `>= 161` to exact `== 161`
 
+## Round 5 Changes (2026-03-15)
+
+### OpenAPI Parity Fixes
+- Entities endpoints: fixed query param name from `entityType` to `type` (spec-correct)
+- Entities endpoints: fixed pagination param from `page-size` to `limit` (spec: 1-5000)
+- Tasks create: added missing `contains-assignee` query parameter
+- Users list: removed dead `--role` option (not in OpenAPI spec)
+- Projects update: changed `--archived` from is_flag to `--archived/--no-archived` (allows un-archiving)
+- Projects create/update: changed `--hourly-rate` and `--cost-rate` from float to int (spec: cents)
+- Timer: added `page`/`page-size` support to `get_running_timer` per spec
+
+### Bug Fixes
+- `session.resolve_workspace`: handle zero workspaces with proper error message
+- `session.resolve_user`: guard against missing `id` key in API response
+- `time_utils.parse_duration_iso`: support days component (`P1DT2H` → 93600s)
+- `_base._get_all_pages`: fix empty dict response causing unnecessary API calls
+
+### Code Quality
+- Added `entity=` kwargs to 9 backend methods (better error messages on 404)
+
 ## Known Gaps
 
 - **No dedicated mixin unit tests** — `core/mixins/*.py` is covered indirectly through CLI tests.
 - **No REPL integration tests** — `_run_repl` is a prompt_toolkit loop that's hard to drive in unit tests.
 - **No 204 No Content explicit test** — tested indirectly via DELETE operations.
+- **REPL connection pool leak** — each REPL command creates a new backend/session without closing the previous one. No impact on CLI mode.
+- **REPL global flags not preserved** — `--json`/`--verbose`/`--debug` set at startup are overwritten per command.
 
 ## Running Tests
 
