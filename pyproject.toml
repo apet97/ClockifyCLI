@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "pytest-mock>=3.12", "responses>=0.25", "freezegun>=1.4"]
+dev = ["pytest>=8.0", "pytest-mock>=3.12", "responses>=0.25", "freezegun>=1.4", "PyYAML>=6.0"]
 
 [project.scripts]
 clockify = "cli_anything.clockify:main"

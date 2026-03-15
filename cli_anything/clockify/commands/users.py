@@ -6,7 +6,7 @@ from cli_anything.clockify.utils import formatters as fmt
 from cli_anything.clockify.utils import repl_skin
 from ._helpers import (
     _ws, _user, _make_backend, _out,
-    _resolve_project_id, _confirm_destructive, handle_errors,
+    _resolve_project_id, _confirm_destructive, _parse_custom_fields, handle_errors,
 )
 
 
@@ -133,24 +133,71 @@ def users_managers(ctx, user_id, sort_column, sort_order, page, page_size, use_j
 
 @users.command("filter")
 @click.option("--name", default=None, help="Filter by name")
+@click.option("--email", default=None, help="Filter by email")
 @click.option("--status", default=None,
               type=click.Choice(["PENDING", "ACTIVE", "DECLINED", "INACTIVE", "ALL"]),
               help="Filter by membership status")
-@click.option("--role", default=None,
+@click.option("--role", "roles", multiple=True,
               type=click.Choice(["WORKSPACE_ADMIN", "OWNER", "TEAM_MANAGER",
                                  "PROJECT_MANAGER"]),
-              help="Filter by role")
+              help="Filter by role (repeatable)")
+@click.option("--memberships", default=None,
+              type=click.Choice(["ALL", "NONE", "WORKSPACE", "PROJECT", "USERGROUP"]),
+              help="Include membership details")
+@click.option("--include-roles", is_flag=True, default=False,
+              help="Include role info in response")
+@click.option("--project-id", default=None, help="Filter by project ID")
+@click.option("--account-status", "account_statuses", multiple=True,
+              help="Filter by account status (repeatable)")
+@click.option("--user-group", "user_groups", multiple=True,
+              help="Filter by user group ID (repeatable)")
+@click.option("--sort-column", default=None,
+              type=click.Choice(["ID", "EMAIL", "NAME", "NAME_LOWERCASE",
+                                 "ACCESS", "HOURLYRATE", "COSTRATE"]),
+              help="Sort column")
+@click.option("--sort-order", default=None,
+              type=click.Choice(["ASCENDING", "DESCENDING"]),
+              help="Sort order")
+@click.option("--page", default=None, type=int, help="Page number")
+@click.option("--page-size", "page_size", default=None, type=int, help="Page size")
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def users_filter(ctx, name, status, role, use_json):
-    """Filter users with advanced criteria."""
+def users_filter(ctx, name, email, status, roles, memberships, include_roles,
+                 project_id, account_statuses, user_groups, sort_column,
+                 sort_order, page, page_size, use_json):
+    """Filter users with advanced criteria (POST-based)."""
     if use_json:
         ctx.obj["json"] = True
     b = _make_backend(ctx)
     ws = _ws(ctx)
-    data = {k: v for k, v in {"name": name, "status": status, "role": role}.items()
-            if v is not None}
+    data: dict = {}
+    if name is not None:
+        data["name"] = name
+    if email is not None:
+        data["email"] = email
+    if status is not None:
+        data["status"] = status
+    if roles:
+        data["roles"] = list(roles)
+    if memberships is not None:
+        data["memberships"] = memberships
+    if include_roles:
+        data["includeRoles"] = True
+    if project_id is not None:
+        data["projectId"] = project_id
+    if account_statuses:
+        data["accountStatuses"] = list(account_statuses)
+    if user_groups:
+        data["userGroups"] = list(user_groups)
+    if sort_column is not None:
+        data["sortColumn"] = sort_column
+    if sort_order is not None:
+        data["sortOrder"] = sort_order
+    if page is not None:
+        data["page"] = page
+    if page_size is not None:
+        data["pageSize"] = page_size
     result = b.filter_users(ws, data)
     if ctx.obj.get("json"):
         fmt.print_json(result)
@@ -162,17 +209,47 @@ def users_filter(ctx, name, status, role, use_json):
 
 @users.command("update-profile")
 @click.argument("user_id")
-@click.option("--name", default=None, help="New name")
+@click.option("--name", default=None, help="New display name")
+@click.option("--image-url", default=None, help="Profile image URL")
+@click.option("--remove-profile-image", is_flag=True, default=False,
+              help="Remove the profile image")
+@click.option("--week-start", default=None,
+              type=click.Choice(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY",
+                                 "FRIDAY", "SATURDAY", "SUNDAY"]),
+              help="First day of the week")
+@click.option("--work-capacity", default=None,
+              help="Work capacity duration string (e.g. PT8H)")
+@click.option("--working-day", "working_days", multiple=True,
+              type=click.Choice(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY",
+                                 "FRIDAY", "SATURDAY", "SUNDAY"]),
+              help="Working day (repeatable)")
+@click.option("--custom-field", "custom_fields", multiple=True,
+              help="User custom field as FIELD_ID=VALUE (repeatable)")
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def users_update_profile(ctx, user_id, name, use_json):
+def users_update_profile(ctx, user_id, name, image_url, remove_profile_image,
+                         week_start, work_capacity, working_days, custom_fields, use_json):
     """Update a workspace member profile."""
     if use_json:
         ctx.obj["json"] = True
     b = _make_backend(ctx)
     ws = _ws(ctx)
-    data = {k: v for k, v in {"name": name}.items() if v is not None}
+    data: dict = {}
+    if name is not None:
+        data["name"] = name
+    if image_url is not None:
+        data["imageUrl"] = image_url
+    if remove_profile_image:
+        data["removeProfileImage"] = True
+    if week_start is not None:
+        data["weekStart"] = week_start
+    if work_capacity is not None:
+        data["workCapacity"] = work_capacity
+    if working_days:
+        data["workingDays"] = list(working_days)
+    if custom_fields:
+        data["userCustomFields"] = _parse_custom_fields(custom_fields)
     result = b.update_member_profile(ws, user_id, data)
     _out(ctx, result, lambda _: repl_skin.success(f"Updated profile for user {user_id}"))
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import responses
 
 from cli_anything.clockify.tests.conftest import (
-    BASE_URL, WS_ID,
+    BASE_URL, REPORTS_URL, WS_ID,
 )
 
 SHARED_REPORTS_URL = f"{BASE_URL}/workspaces/{WS_ID}/shared-reports"
@@ -51,6 +51,21 @@ def test_update_shared_report(backend):
     responses.add(responses.PUT, url, json=report, status=200)
     result = backend.update_shared_report(WS_ID, report["id"], {"isPublic": True})
     assert result["isPublic"] is True
+
+
+@responses.activate
+def test_get_shared_report_uses_reports_domain(backend):
+    """get_shared_report GETs from the reports domain endpoint."""
+    report = make_shared_report()
+    responses.add(
+        responses.GET,
+        f"{REPORTS_URL}/shared-reports/{report['id']}",
+        json=report,
+        status=200,
+        match_querystring=False,
+    )
+    result = backend.get_shared_report(report["id"])
+    assert result["id"] == report["id"]
 
 
 @responses.activate

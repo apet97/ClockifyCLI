@@ -10,6 +10,7 @@ from cli_anything.clockify.utils.time_utils import (
 from ._helpers import (
     _ws, _user, _make_backend, _out,
     _resolve_project_id, _confirm_destructive, handle_errors,
+    _parse_json_option,
 )
 
 
@@ -28,8 +29,8 @@ def assignments():
 
 
 @assignments.command("list")
-@click.option("--start", default=None, help="Start date (YYYY-MM-DD)")
-@click.option("--end", default=None, help="End date (YYYY-MM-DD)")
+@click.option("--start", required=True, help="Start date (YYYY-MM-DD, required by API)")
+@click.option("--end", required=True, help="End date (YYYY-MM-DD, required by API)")
 @click.option("--user-id", default=None, help="Filter by user ID")
 @click.option("--project-id", default=None, help="Filter by project ID")
 @click.option("--name", default=None, help="Filter by assignment name")
@@ -51,7 +52,11 @@ def assignments_list(ctx, start, end, user_id, project_id, name, sort_column, so
         ctx.obj["json"] = True
     b = _make_backend(ctx)
     ws = _ws(ctx)
-    params = {k: v for k, v in {"start": start, "end": end, "userId": user_id, "projectId": project_id}.items() if v is not None}
+    params: dict = {"start": start, "end": end}
+    if user_id:
+        params["userId"] = user_id
+    if project_id:
+        params["projectId"] = project_id
     if page is not None:
         params["page"] = page
     if page_size is not None:
@@ -223,8 +228,8 @@ def assignments_copy(ctx, assignment_id, user_id, series_update_option, use_json
 
 
 @assignments.command("publish")
-@click.option("--start", default=None, help="Start date (YYYY-MM-DD, 'today', or 'yesterday')")
-@click.option("--end", default=None, help="End date (YYYY-MM-DD, 'today', or 'yesterday')")
+@click.option("--start", required=True, help="Start date (YYYY-MM-DD, 'today', or 'yesterday'; required by API)")
+@click.option("--end", required=True, help="End date (YYYY-MM-DD, 'today', or 'yesterday'; required by API)")
 @click.option("--notify-users/--no-notify-users", default=None,
               help="Notify users when assignments are published")
 @click.option("--search", default=None, help="Search filter")
@@ -235,16 +240,15 @@ def assignments_copy(ctx, assignment_id, user_id, series_update_option, use_json
 @click.pass_context
 @handle_errors
 def assignments_publish(ctx, start, end, notify_users, search, view_type, use_json):
-    """Publish pending assignments."""
+    """Publish pending assignments (start and end are required)."""
     if use_json:
         ctx.obj["json"] = True
     b = _make_backend(ctx)
     ws = _ws(ctx)
-    data: dict = {}
-    if start:
-        data["start"] = parse_date_arg(start)
-    if end:
-        data["end"] = parse_date_arg(end)
+    data: dict = {
+        "start": parse_date_arg(start),
+        "end": parse_date_arg(end),
+    }
     if notify_users is not None:
         data["notifyUsers"] = notify_users
     if search is not None:
@@ -300,7 +304,9 @@ def assignments_user_capacity(ctx, user_id, start, end, page, page_size, use_jso
 # ── scheduling extra commands ──────────────────────────────────────────
 
 @assignments.command("batch-totals")
-@click.option("--project-id", "project_ids", multiple=True, required=True,
+@click.option("--start", required=True, help="Start date (YYYY-MM-DD)")
+@click.option("--end", required=True, help="End date (YYYY-MM-DD)")
+@click.option("--project-id", "project_ids", multiple=True,
               help="Project ID (repeatable)")
 @click.option("--page", default=None, type=int, help="Page number")
 @click.option("--page-size", "page_size", default=None, type=int, help="Page size")
@@ -311,13 +317,15 @@ def assignments_user_capacity(ctx, user_id, start, end, page, page_size, use_jso
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def assignments_batch_totals(ctx, project_ids, page, page_size, search, status_filter, use_json):
+def assignments_batch_totals(ctx, start, end, project_ids, page, page_size, search, status_filter, use_json):
     """Get assignment totals for multiple projects in one call."""
     if use_json:
         ctx.obj["json"] = True
     b = _make_backend(ctx)
     ws = _ws(ctx)
-    body: dict = {"projectIds": list(project_ids)}
+    body: dict = {"start": start, "end": end}
+    if project_ids:
+        body["projectIds"] = list(project_ids)
     if page is not None:
         body["page"] = page
     if page_size is not None:
@@ -334,7 +342,9 @@ def assignments_batch_totals(ctx, project_ids, page, page_size, search, status_f
 
 
 @assignments.command("capacity-filter")
-@click.option("--user-id", "user_ids", multiple=True, required=True,
+@click.option("--start", required=True, help="Start date (YYYY-MM-DD)")
+@click.option("--end", required=True, help="End date (YYYY-MM-DD)")
+@click.option("--user-id", "user_ids", multiple=True,
               help="User ID (repeatable)")
 @click.option("--page", default=None, type=int, help="Page number")
 @click.option("--page-size", "page_size", default=None, type=int, help="Page size")
@@ -342,16 +352,20 @@ def assignments_batch_totals(ctx, project_ids, page, page_size, search, status_f
 @click.option("--status-filter", default=None,
               type=click.Choice(["PUBLISHED", "UNPUBLISHED", "ALL"]),
               help="Filter by publish status")
+@click.option("--user-filter", "user_filter", default=None, help="User filter (JSON)")
+@click.option("--user-group-filter", "user_group_filter", default=None, help="User group filter (JSON)")
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def assignments_capacity_filter(ctx, user_ids, page, page_size, search, status_filter, use_json):
+def assignments_capacity_filter(ctx, start, end, user_ids, page, page_size, search, status_filter, user_filter, user_group_filter, use_json):
     """Get capacity totals for multiple users in one call."""
     if use_json:
         ctx.obj["json"] = True
     b = _make_backend(ctx)
     ws = _ws(ctx)
-    body: dict = {"userIds": list(user_ids)}
+    body: dict = {"start": start, "end": end}
+    if user_ids:
+        body["userIds"] = list(user_ids)
     if page is not None:
         body["page"] = page
     if page_size is not None:
@@ -360,6 +374,10 @@ def assignments_capacity_filter(ctx, user_ids, page, page_size, search, status_f
         body["search"] = search
     if status_filter is not None:
         body["statusFilter"] = status_filter
+    if user_filter is not None:
+        body["userFilter"] = _parse_json_option(user_filter, "user-filter")
+    if user_group_filter is not None:
+        body["userGroupFilter"] = _parse_json_option(user_group_filter, "user-group-filter")
     result = b.get_users_capacity_filter(ws, body)
     if ctx.obj.get("json"):
         fmt.print_json(result)

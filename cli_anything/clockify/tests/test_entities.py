@@ -82,6 +82,23 @@ def test_list_updated_entities(backend):
 
 
 @responses.activate
+def test_list_created_entities_no_dates(backend):
+    """list_created_entities works without start/end (optional per spec)."""
+    entities = [make_entity_change()]
+    responses.add(
+        responses.GET, ENTITIES_CREATED_URL,
+        json=entities, status=200,
+        match_querystring=False,
+    )
+    result = backend.list_created_entities(WS_ID, "TIME_ENTRY")
+    assert len(result) == 1
+    req = responses.calls[0].request
+    assert "type=TIME_ENTRY" in req.url
+    assert "start=" not in req.url
+    assert "end=" not in req.url
+
+
+@responses.activate
 def test_cli_entities_created_json(runner, session):
     """entities created --type ... returns JSON array."""
     from cli_anything.clockify.clockify_cli import main

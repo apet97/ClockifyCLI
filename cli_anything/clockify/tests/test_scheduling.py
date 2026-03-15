@@ -107,7 +107,7 @@ def test_assignments_list_sort_filter(runner):
         status=200,
         match_querystring=False,
     )
-    result = runner.invoke(main, ["--api-key", API_KEY, "--workspace", WS_ID, "scheduling", "assignments", "list", "--sort-column", "USER", "--sort-order", "ASCENDING", "--json"])
+    result = runner.invoke(main, ["--api-key", API_KEY, "--workspace", WS_ID, "scheduling", "assignments", "list", "--start", "2024-01-01", "--end", "2024-12-31", "--sort-column", "USER", "--sort-order", "ASCENDING", "--json"])
     assert result.exit_code == 0, result.output
     assert "sort-column=USER" in responses.calls[0].request.url
 
@@ -121,6 +121,6 @@ def test_assignments_list_name_filter(runner):
         status=200,
         match_querystring=False,
     )
-    result = runner.invoke(main, ["--api-key", API_KEY, "--workspace", WS_ID, "scheduling", "assignments", "list", "--name", "Sprint", "--json"])
+    result = runner.invoke(main, ["--api-key", API_KEY, "--workspace", WS_ID, "scheduling", "assignments", "list", "--start", "2024-01-01", "--end", "2024-12-31", "--name", "Sprint", "--json"])
     assert result.exit_code == 0, result.output
     assert "name=Sprint" in responses.calls[0].request.url

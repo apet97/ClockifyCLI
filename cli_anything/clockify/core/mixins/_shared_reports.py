@@ -37,7 +37,6 @@ class SharedReportsMixin:
 
     def get_shared_report(
         self,
-        workspace_id: str,
         report_id: str,
         *,
         date_range_start: Optional[str] = None,
@@ -48,7 +47,7 @@ class SharedReportsMixin:
         page: Optional[int] = None,
         page_size: Optional[int] = None,
     ) -> dict:
-        """GET /v1/workspaces/{workspaceId}/shared-reports/{reportId}"""
+        """GET /v1/shared-reports/{id}"""
         params: dict = {}
         if date_range_start:
             params["dateRangeStart"] = date_range_start
@@ -64,11 +63,8 @@ class SharedReportsMixin:
             params["page"] = str(page)
         if page_size is not None:
             params["page-size"] = str(page_size)
-        return self._get(  # type: ignore[attr-defined]
-            f"/workspaces/{workspace_id}/shared-reports/{report_id}",
-            params=params or None,
-            entity=f"shared report {report_id}",
-        )
+        return self._request("GET", self._reports_url(f"/shared-reports/{report_id}"),  # type: ignore[attr-defined]
+                             params=params or None, entity=f"shared report {report_id}")
 
     def get_public_shared_report(
         self,
@@ -82,7 +78,7 @@ class SharedReportsMixin:
         page: Optional[int] = None,
         page_size: Optional[int] = None,
     ) -> dict:
-        """GET /v1/shared-reports/{id} (reports domain)"""
+        """GET /v1/shared-reports/{id}"""
         params: dict = {}
         if dateRangeStart:
             params["dateRangeStart"] = dateRangeStart

@@ -47,7 +47,7 @@ def reports():
               help="Export format")
 @click.option("--archived", is_flag=True, default=False, help="Include archived entries")
 @click.option("--amount-shown", default=None,
-              type=click.Choice(["EARNED", "COST", "PROFIT", "HIDE_AMOUNT"]),
+              type=click.Choice(["EARNED", "COST", "PROFIT", "HIDE_AMOUNT", "EXPORT"]),
               help="Amount display mode")
 @click.option("--rounding", is_flag=True, default=False, help="Round durations")
 @click.option("--timezone", default=None, help="Timezone for report (e.g. UTC, America/New_York)")
@@ -110,17 +110,17 @@ def reports_detailed(ctx, start, end, project, user_ids, client_ids, tag_ids, ta
 @click.option("--user-group", "user_group_ids", multiple=True, help="Filter by user group ID (repeatable)")
 @click.option("--description", default=None, help="Filter by description text")
 @click.option("--approval-state", default=None,
-              type=click.Choice(["PENDING", "APPROVED", "WITHDRAWN_APPROVAL"]),
+              type=click.Choice(["APPROVED", "UNAPPROVED", "ALL"]),
               help="Filter by approval state")
 @click.option("--invoicing-state", default=None,
-              type=click.Choice(["INVOICED", "UNINVOICED"]),
+              type=click.Choice(["INVOICED", "UNINVOICED", "ALL"]),
               help="Filter by invoicing state")
 @click.option("--export-type", default=None,
               type=click.Choice(["JSON", "JSON_V1", "PDF", "CSV", "XLSX", "ZIP"]),
               help="Export format")
 @click.option("--archived", is_flag=True, default=False, help="Include archived entries")
 @click.option("--amount-shown", default=None,
-              type=click.Choice(["EARNED", "COST", "PROFIT", "HIDE_AMOUNT"]),
+              type=click.Choice(["EARNED", "COST", "PROFIT", "HIDE_AMOUNT", "EXPORT"]),
               help="Amount display mode")
 @click.option("--rounding", is_flag=True, default=False, help="Round durations")
 @click.option("--timezone", default=None, help="Timezone for report (e.g. UTC, America/New_York)")
@@ -179,17 +179,17 @@ def reports_summary(ctx, start, end, group_by, summary_sort_column, summary_sort
 @click.option("--user-group", "user_group_ids", multiple=True, help="Filter by user group ID (repeatable)")
 @click.option("--description", default=None, help="Filter by description text")
 @click.option("--approval-state", default=None,
-              type=click.Choice(["PENDING", "APPROVED", "WITHDRAWN_APPROVAL"]),
+              type=click.Choice(["APPROVED", "UNAPPROVED", "ALL"]),
               help="Filter by approval state")
 @click.option("--invoicing-state", default=None,
-              type=click.Choice(["INVOICED", "UNINVOICED"]),
+              type=click.Choice(["INVOICED", "UNINVOICED", "ALL"]),
               help="Filter by invoicing state")
 @click.option("--export-type", default=None,
               type=click.Choice(["JSON", "JSON_V1", "PDF", "CSV", "XLSX", "ZIP"]),
               help="Export format")
 @click.option("--archived", is_flag=True, default=False, help="Include archived entries")
 @click.option("--amount-shown", default=None,
-              type=click.Choice(["EARNED", "COST", "PROFIT", "HIDE_AMOUNT"]),
+              type=click.Choice(["EARNED", "COST", "PROFIT", "HIDE_AMOUNT", "EXPORT"]),
               help="Amount display mode")
 @click.option("--rounding", is_flag=True, default=False, help="Round durations")
 @click.option("--timezone", default=None, help="Timezone for report (e.g. UTC, America/New_York)")

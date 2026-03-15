@@ -59,15 +59,14 @@ def shared_reports_get(ctx, report_id, start, end, sort_column, sort_order, expo
     if use_json:
         ctx.obj["json"] = True
     b = _make_backend(ctx)
-    ws = _ws(ctx)
-    data = b.get_shared_report(ws, report_id,
-                                date_range_start=start,
-                                date_range_end=end,
-                                sort_column=sort_column,
-                                sort_order=sort_order,
-                                export_type=export_type,
-                                page=page,
-                                page_size=page_size)
+    data = b.get_shared_report(report_id,
+                               date_range_start=start,
+                               date_range_end=end,
+                               sort_column=sort_column,
+                               sort_order=sort_order,
+                               export_type=export_type,
+                               page=page,
+                               page_size=page_size)
     _out(ctx, data)
 
 

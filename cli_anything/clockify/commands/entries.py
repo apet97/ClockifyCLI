@@ -11,7 +11,8 @@ from cli_anything.clockify.utils.time_utils import (
 )
 from ._helpers import (
     _ws, _user, _make_backend, _out,
-    _resolve_project_id, _confirm_destructive, _parse_custom_fields, handle_errors,
+    _resolve_project_id, _confirm_destructive, _parse_custom_fields,
+    _parse_custom_attributes, handle_errors,
 )
 
 
@@ -139,12 +140,14 @@ def entries_get(ctx, entry_id, hydrated, use_json):
               help="Entry type (REGULAR, BREAK)")
 @click.option("--custom-field", "custom_fields", multiple=True,
               help="Custom field value as FIELD_ID=VALUE (repeatable)")
+@click.option("--custom-attribute", "custom_attributes", multiple=True,
+              help="Custom attribute as NAMESPACE:NAME=VALUE (repeatable, max 10)")
 @click.option("--for-user", default=None, help="Create entry for another user (user ID)")
 @click.option("--from-entry", "from_entry", default=None, help="Duplicate an existing time entry by ID")
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def entries_add(ctx, start, end, description, project, tags, task, billable, entry_type, custom_fields, for_user, from_entry, use_json):
+def entries_add(ctx, start, end, description, project, tags, task, billable, entry_type, custom_fields, custom_attributes, for_user, from_entry, use_json):
     """Create a new (completed) time entry."""
     if use_json:
         ctx.obj["json"] = True
@@ -169,6 +172,8 @@ def entries_add(ctx, start, end, description, project, tags, task, billable, ent
         body["type"] = entry_type
     if custom_fields:
         body["customFields"] = _parse_custom_fields(custom_fields)
+    if custom_attributes:
+        body["customAttributes"] = _parse_custom_attributes(custom_attributes)
     entry = b.create_entry(ws, uid, body, from_entry=from_entry)
     _out(ctx, entry, lambda d: repl_skin.success(
         f"Entry created [{d.get('id', '')}]"
@@ -188,10 +193,12 @@ def entries_add(ctx, start, end, description, project, tags, task, billable, ent
               help="Entry type (REGULAR, BREAK)")
 @click.option("--custom-field", "custom_fields", multiple=True,
               help="Custom field value as FIELD_ID=VALUE (repeatable)")
+@click.option("--custom-attribute", "custom_attributes", multiple=True,
+              help="Custom attribute as NAMESPACE:NAME=VALUE (repeatable, max 10)")
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def entries_add_direct(ctx, start, end, description, project, tags, task, billable, entry_type, custom_fields, use_json):
+def entries_add_direct(ctx, start, end, description, project, tags, task, billable, entry_type, custom_fields, custom_attributes, use_json):
     """Create a time entry directly (workspace-scoped, no user ID)."""
     if use_json:
         ctx.obj["json"] = True
@@ -215,6 +222,8 @@ def entries_add_direct(ctx, start, end, description, project, tags, task, billab
         body["type"] = entry_type
     if custom_fields:
         body["customFields"] = _parse_custom_fields(custom_fields)
+    if custom_attributes:
+        body["customAttributes"] = _parse_custom_attributes(custom_attributes)
     entry = b.create_time_entry_direct(ws, body)
     _out(ctx, entry, lambda d: repl_skin.success(
         f"Entry created (direct) [{d.get('id', '')}]"

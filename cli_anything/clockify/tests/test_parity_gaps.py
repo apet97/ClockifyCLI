@@ -821,8 +821,9 @@ def test_shared_reports_get(runner):
     """shared-reports get <id> returns report JSON."""
     report = {"id": REPORT_ID, "name": "Q1 Report", "workspaceId": WS_ID}
     responses.add(
-        responses.GET, f"{SHARED_REPORTS_URL}/{REPORT_ID}",
+        responses.GET, f"{REPORTS_URL}/shared-reports/{REPORT_ID}",
         json=report, status=200,
+        match_querystring=False,
     )
     result = _invoke(runner, [
         "shared-reports", "get", REPORT_ID, "--json",
@@ -1102,11 +1103,12 @@ def test_custom_fields_update_type(runner):
     )
     result = _invoke(runner, [
         "custom-fields", "update", CF_ID,
-        "--field-type", "NUMBER", "--json",
+        "--name", "Updated Field", "--field-type", "NUMBER", "--json",
     ])
     assert result.exit_code == 0, result.output
     sent = json.loads(responses.calls[-1].request.body)
     assert sent["type"] == "NUMBER"
+    assert sent["name"] == "Updated Field"
 
 
 @responses.activate

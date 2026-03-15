@@ -149,11 +149,16 @@ class CustomFieldsMixin:
 
 class EntitiesMixin:
     def list_created_entities(
-        self, workspace_id: str, entity_type: str, start: str, end: str,
+        self, workspace_id: str, entity_type: str,
+        start: Optional[str] = None, end: Optional[str] = None,
         *, page: Optional[int] = None, limit: Optional[int] = None,
     ) -> list:
         """GET /v1/workspaces/{workspaceId}/entities/created"""
-        params: dict = {"type": entity_type, "start": start, "end": end}
+        params: dict = {"type": entity_type}
+        if start is not None:
+            params["start"] = start
+        if end is not None:
+            params["end"] = end
         if page is not None:
             params["page"] = str(page)
         if limit is not None:
@@ -166,11 +171,16 @@ class EntitiesMixin:
         return data if isinstance(data, list) else []
 
     def list_deleted_entities(
-        self, workspace_id: str, entity_type: str, start: str, end: str,
+        self, workspace_id: str, entity_type: str,
+        start: Optional[str] = None, end: Optional[str] = None,
         *, page: Optional[int] = None, limit: Optional[int] = None,
     ) -> list:
         """GET /v1/workspaces/{workspaceId}/entities/deleted"""
-        params: dict = {"type": entity_type, "start": start, "end": end}
+        params: dict = {"type": entity_type}
+        if start is not None:
+            params["start"] = start
+        if end is not None:
+            params["end"] = end
         if page is not None:
             params["page"] = str(page)
         if limit is not None:
@@ -183,11 +193,16 @@ class EntitiesMixin:
         return data if isinstance(data, list) else []
 
     def list_updated_entities(
-        self, workspace_id: str, entity_type: str, start: str, end: str,
+        self, workspace_id: str, entity_type: str,
+        start: Optional[str] = None, end: Optional[str] = None,
         *, page: Optional[int] = None, limit: Optional[int] = None,
     ) -> list:
         """GET /v1/workspaces/{workspaceId}/entities/updated"""
-        params: dict = {"type": entity_type, "start": start, "end": end}
+        params: dict = {"type": entity_type}
+        if start is not None:
+            params["start"] = start
+        if end is not None:
+            params["end"] = end
         if page is not None:
             params["page"] = str(page)
         if limit is not None:

@@ -98,6 +98,28 @@ def _parse_custom_fields(raw_fields: tuple) -> list[dict]:
     return result
 
 
+def _parse_custom_attributes(raw_attrs: tuple) -> list[dict]:
+    """Parse --custom-attribute NAMESPACE:NAME=VALUE triples."""
+    result = []
+    for attr in raw_attrs:
+        if "=" not in attr:
+            raise click.UsageError(
+                f"Custom attribute must be NAMESPACE:NAME=VALUE, got: {attr}"
+            )
+        key, value = attr.split("=", 1)
+        if ":" not in key:
+            raise click.UsageError(
+                f"Expected NAMESPACE:NAME before '=', got: {key}"
+            )
+        namespace, name = key.split(":", 1)
+        if not namespace.strip():
+            raise click.UsageError(f"Namespace cannot be empty in: {attr}")
+        if not name.strip():
+            raise click.UsageError(f"Name cannot be empty in: {attr}")
+        result.append({"namespace": namespace, "name": name, "value": value})
+    return result
+
+
 def _confirm_destructive(ctx: click.Context, name: str, confirm: bool) -> None:
     """Prompt for confirmation unless --confirm or --json mode."""
     if confirm or ctx.obj.get("json"):

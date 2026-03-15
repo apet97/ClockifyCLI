@@ -236,9 +236,9 @@ def holidays_create(ctx, name, date, occurs_annually, color, everyone_including_
 
 @holidays.command("update")
 @click.argument("holiday_id")
-@click.option("--name", default=None, help="New name")
-@click.option("--date", default=None, help="Holiday date (YYYY-MM-DD)")
-@click.option("--recurring/--no-recurring", "occurs_annually", default=None, help="Holiday occurs annually")
+@click.option("--name", required=True, help="Holiday name (required by API)")
+@click.option("--date", required=True, help="Holiday date YYYY-MM-DD (required by API)")
+@click.option("--recurring/--no-recurring", "occurs_annually", required=True, help="Holiday occurs annually (required by API)")
 @click.option("--color", default=None, help="Color hex code (e.g. #8BC34A)")
 @click.option("--everyone/--not-everyone", "everyone_including_new", default=None, help="Apply to all users including new")
 @click.option("--auto-time-entry/--no-auto-time-entry", "auto_time_entry", default=None, help="Create automatic time entries")
@@ -246,18 +246,19 @@ def holidays_create(ctx, name, date, occurs_annually, color, everyone_including_
 @click.pass_context
 @handle_errors
 def holidays_update(ctx, holiday_id, name, date, occurs_annually, color, everyone_including_new, auto_time_entry, use_json):
-    """Update a holiday."""
+    """Update a holiday (PUT — name, date, recurring are required)."""
     if use_json:
         ctx.obj["json"] = True
     b = _make_backend(ctx)
     ws = _ws(ctx)
-    data: dict = {}
-    if name is not None:
-        data["name"] = name
-    if date is not None:
-        data["datePeriod"] = {"startDate": parse_date_arg(date) + "T00:00:00Z", "endDate": parse_date_arg(date) + "T23:59:59Z"}
-    if occurs_annually is not None:
-        data["occursAnnually"] = occurs_annually
+    data: dict = {
+        "name": name,
+        "datePeriod": {
+            "startDate": parse_date_arg(date) + "T00:00:00Z",
+            "endDate": parse_date_arg(date) + "T23:59:59Z",
+        },
+        "occursAnnually": occurs_annually,
+    }
     if color is not None:
         data["color"] = color
     if everyone_including_new is not None:
@@ -365,11 +366,11 @@ def custom_fields_create(ctx, name, field_type, description, entity_type, status
 
 @custom_fields.command("update")
 @click.argument("field_id")
-@click.option("--name", default=None, help="New name")
-@click.option("--field-type", "field_type", default=None,
+@click.option("--name", required=True, help="Custom field name (required by API)")
+@click.option("--field-type", "field_type", required=True,
               type=click.Choice(["TXT", "NUMBER", "DROPDOWN_SINGLE", "DROPDOWN_MULTIPLE",
                                  "CHECKBOX", "LINK"]),
-              help="Custom field type")
+              help="Custom field type (required by API)")
 @click.option("--description", default=None, help="Field description (max 3000 chars)")
 @click.option("--status", default=None,
               type=click.Choice(["INACTIVE", "VISIBLE", "INVISIBLE"]),
@@ -383,16 +384,12 @@ def custom_fields_create(ctx, name, field_type, description, entity_type, status
 @click.pass_context
 @handle_errors
 def custom_fields_update(ctx, field_id, name, field_type, description, status, only_admin_can_edit, placeholder, required, allowed_values, default_value, use_json):
-    """Update a custom field."""
+    """Update a custom field (PUT — name and type are required)."""
     if use_json:
         ctx.obj["json"] = True
     b = _make_backend(ctx)
     ws = _ws(ctx)
-    data: dict = {}
-    if name is not None:
-        data["name"] = name
-    if field_type is not None:
-        data["type"] = field_type
+    data: dict = {"name": name, "type": field_type}
     if description is not None:
         data["description"] = description
     if status is not None:
@@ -519,70 +516,73 @@ _ENTITY_DOC_TYPES = [
 
 
 @entities.command("created")
-@click.option("--type", "entity_type", required=True,
+@click.option("--type", "entity_types", required=True, multiple=True,
               type=click.Choice(_ENTITY_DOC_TYPES),
-              help="Entity document type")
-@click.option("--start", required=True, help="Start date (YYYY-MM-DD)")
-@click.option("--end", required=True, help="End date (YYYY-MM-DD)")
+              help="Entity document type (repeatable)")
+@click.option("--start", default=None, help="Start date (YYYY-MM-DD, optional — defaults to 30 days ago)")
+@click.option("--end", default=None, help="End date (YYYY-MM-DD, optional — defaults to now)")
 @click.option("--page", default=None, type=int, help="Page number")
 @click.option("--limit", default=None, type=int, help="Max results per page (1-5000, default 50)")
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def entities_created(ctx, entity_type, start, end, page, limit, use_json):
+def entities_created(ctx, entity_types, start, end, page, limit, use_json):
     """List created entities in a date range."""
     if use_json:
         ctx.obj["json"] = True
     b = _make_backend(ctx)
     ws = _ws(ctx)
-    start_iso = parse_date_arg(start) + "T00:00:00Z"
-    end_iso = parse_date_arg(end) + "T23:59:59Z"
+    start_iso = (parse_date_arg(start) + "T00:00:00Z") if start else None
+    end_iso = (parse_date_arg(end) + "T23:59:59Z") if end else None
+    entity_type = ",".join(entity_types)
     data = b.list_created_entities(ws, entity_type, start_iso, end_iso, page=page, limit=limit)
     _out(ctx, data, fmt.print_entity_changes)
 
 
 @entities.command("deleted")
-@click.option("--type", "entity_type", required=True,
+@click.option("--type", "entity_types", required=True, multiple=True,
               type=click.Choice(_ENTITY_DOC_TYPES),
-              help="Entity document type")
-@click.option("--start", required=True, help="Start date (YYYY-MM-DD)")
-@click.option("--end", required=True, help="End date (YYYY-MM-DD)")
+              help="Entity document type (repeatable)")
+@click.option("--start", default=None, help="Start date (YYYY-MM-DD, optional — defaults to 30 days ago)")
+@click.option("--end", default=None, help="End date (YYYY-MM-DD, optional — defaults to now)")
 @click.option("--page", default=None, type=int, help="Page number")
 @click.option("--limit", default=None, type=int, help="Max results per page (1-5000, default 50)")
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def entities_deleted(ctx, entity_type, start, end, page, limit, use_json):
+def entities_deleted(ctx, entity_types, start, end, page, limit, use_json):
     """List deleted entities in a date range."""
     if use_json:
         ctx.obj["json"] = True
     b = _make_backend(ctx)
     ws = _ws(ctx)
-    start_iso = parse_date_arg(start) + "T00:00:00Z"
-    end_iso = parse_date_arg(end) + "T23:59:59Z"
+    start_iso = (parse_date_arg(start) + "T00:00:00Z") if start else None
+    end_iso = (parse_date_arg(end) + "T23:59:59Z") if end else None
+    entity_type = ",".join(entity_types)
     data = b.list_deleted_entities(ws, entity_type, start_iso, end_iso, page=page, limit=limit)
     _out(ctx, data, fmt.print_entity_changes)
 
 
 @entities.command("updated")
-@click.option("--type", "entity_type", required=True,
+@click.option("--type", "entity_types", required=True, multiple=True,
               type=click.Choice(_ENTITY_DOC_TYPES),
-              help="Entity document type")
-@click.option("--start", required=True, help="Start date (YYYY-MM-DD)")
-@click.option("--end", required=True, help="End date (YYYY-MM-DD)")
+              help="Entity document type (repeatable)")
+@click.option("--start", default=None, help="Start date (YYYY-MM-DD, optional — defaults to 30 days ago)")
+@click.option("--end", default=None, help="End date (YYYY-MM-DD, optional — defaults to now)")
 @click.option("--page", default=None, type=int, help="Page number")
 @click.option("--limit", default=None, type=int, help="Max results per page (1-5000, default 50)")
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def entities_updated(ctx, entity_type, start, end, page, limit, use_json):
+def entities_updated(ctx, entity_types, start, end, page, limit, use_json):
     """List updated entities in a date range."""
     if use_json:
         ctx.obj["json"] = True
     b = _make_backend(ctx)
     ws = _ws(ctx)
-    start_iso = parse_date_arg(start) + "T00:00:00Z"
-    end_iso = parse_date_arg(end) + "T23:59:59Z"
+    start_iso = (parse_date_arg(start) + "T00:00:00Z") if start else None
+    end_iso = (parse_date_arg(end) + "T23:59:59Z") if end else None
+    entity_type = ",".join(entity_types)
     data = b.list_updated_entities(ws, entity_type, start_iso, end_iso, page=page, limit=limit)
     _out(ctx, data, fmt.print_entity_changes)
 

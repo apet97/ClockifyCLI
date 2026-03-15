@@ -2,9 +2,9 @@
 
 ## Summary
 
-**349 tests · 27 files · ~1s runtime · all mocked (no network)**
+**380 tests · 28 files · ~4s runtime · all mocked (no network)**
 
-All tests pass as of 2026-03-15 after Round 4 (Code Quality & Enterprise Hardening): response handling hardening, input validation, file I/O safety checks, and 6 new tests.
+All tests pass as of 2026-03-15 after Round 6 (Enterprise CLI Parity): enum corrections, required field enforcement, missing body field coverage, custom attributes, and comprehensive parity tests.
 
 ## Test Strategy
 
@@ -30,7 +30,8 @@ All tests pass as of 2026-03-15 after Round 4 (Code Quality & Enterprise Hardeni
 |------|------:|--------|
 | `test_backend.py` | 80 | HTTP infrastructure: retry on 429/ConnectionError, pagination, error mapping (401-500+), dry-run, verbose, debug redaction, Retry-After, timeouts, rate-limit logging, profiles, config permissions, malformed JSON, 400/409 clean errors, empty custom field ID, file-not-found upload, bad export path |
 | `test_parity_gaps.py` | 61 | Deep coverage of groups, webhooks, approval, time-off, scheduling, expenses, users, reports, invoices, misc |
-| `test_cli_coverage.py` | 39 | Cross-domain coverage: enum validations, MCP hardening, manifest assertion (exact 161 commands) |
+| `test_openapi_parity.py` | 1 | Spec-driven backend/OpenAPI operation parity against `openapi.cleaned 2.yaml` |
+| `test_cli_coverage.py` | 56 | Cross-domain coverage: enum validations, MCP hardening, manifest assertion (exact 161 commands), parity tests for entries custom attributes, holidays/custom-fields required fields, entities optional dates, scheduling required params, users custom fields |
 | `test_cli_gaps_2.py` | 21 | Additional gap-fill: shared-reports, entities, entries bulk ops |
 | `test_invoices.py` | 9 | Invoice CRUD, duplicate, export, status, filter, settings |
 | `test_entries.py` | 9 | Time entry list, get, add, update, delete, today |
@@ -54,8 +55,8 @@ All tests pass as of 2026-03-15 after Round 4 (Code Quality & Enterprise Hardeni
 | `test_holidays.py` | 5 | Holiday list, in-period, create, update, delete |
 | `test_entries_extra.py` | 5 | Entry edge cases: duplicate, bulk-delete, mark-invoiced |
 | `test_workspaces.py` | 4 | Workspace list, use, invite, create |
-| `test_entities.py` | 4 | Entity created/updated/deleted audit |
-| **Total** | **349** | |
+| `test_entities.py` | 5 | Entity created/updated/deleted audit, optional-dates backend test |
+| **Total** | **380** | |
 
 ## Round 4 Changes (2026-03-15)
 
@@ -81,6 +82,7 @@ All tests pass as of 2026-03-15 after Round 4 (Code Quality & Enterprise Hardeni
 - Projects update: changed `--archived` from is_flag to `--archived/--no-archived` (allows un-archiving)
 - Projects create/update: changed `--hourly-rate` and `--cost-rate` from float to int (spec: cents)
 - Timer: added `page`/`page-size` support to `get_running_timer` per spec
+- Shared reports: fixed `shared-reports get` to use `GET /v1/shared-reports/{id}` on the reports domain
 
 ### Bug Fixes
 - `session.resolve_workspace`: handle zero workspaces with proper error message
@@ -114,10 +116,24 @@ cd /Users/15x/Downloads/anyCLI/CLI-Anything/clockify/agent-harness
 .venv/bin/pytest cli_anything/clockify/tests/ -v -s
 ```
 
+## Round 6 Changes (2026-03-15)
+
+### Enterprise CLI Parity (29 new tests)
+- Fixed 5 enum correctness bugs in reports (approval-state, invoicing-state, amount-shown)
+- Made scheduling batch-totals, capacity-filter, list, publish `--start`/`--end` required per spec
+- Made holidays update `--name`, `--date`, `--recurring` required per spec (PUT = full replacement)
+- Made custom-fields update `--name`, `--field-type` required per spec (PUT = full replacement)
+- Added `--custom-attribute` to entries add/add-direct (spec: customAttributes array)
+- Added `--custom-field` to users update-profile (spec: userCustomFields array)
+- Enriched users filter from 3 to 12+ body fields
+- Enriched users update-profile from 1 to 6+ body fields
+- Made entities `--type` repeatable (spec: array query param)
+- Made entities `--start`/`--end` optional (spec: defaults to 30-day range)
+
 ## Results (2026-03-15)
 
 ```
-349 passed, 99 warnings in ~1s
+380 passed, 104 warnings in ~4s
 ```
 
 Warnings are all `DeprecationWarning: Argument 'match_querystring' is deprecated` from the `responses` library — tests use `match_querystring=False` (legacy positional arg style). No functional impact.
