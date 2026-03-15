@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import responses
 
-from click.testing import CliRunner
+from click.testing import CliRunner, Result
 
 from cli_anything.clockify.tests.conftest import BASE_URL, WS_ID, API_KEY, USER_ID
 from cli_anything.clockify.clockify_cli import main
@@ -36,7 +36,7 @@ REQUEST_ID = "req1111111111111111111111"
 ENTRY_ID = "entry111111111111111111111"
 
 
-def _invoke(runner: CliRunner, args: list) -> object:
+def _invoke(runner: CliRunner, args: list) -> Result:
     return runner.invoke(main, ["--api-key", API_KEY, "--workspace", WS_ID] + args)
 
 
