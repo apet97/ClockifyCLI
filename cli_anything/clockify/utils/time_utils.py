@@ -97,18 +97,20 @@ def parse_datetime_arg(s: str) -> str:
 def parse_duration_iso(s: str) -> int:
     """Parse a Clockify ISO 8601 duration string into seconds.
 
-    Example: 'PT8H30M0S' → 30600
+    Examples: 'PT8H30M0S' → 30600, 'P1DT2H' → 93600
     """
     pattern = re.compile(
-        r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?", re.IGNORECASE
+        r"P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?",
+        re.IGNORECASE,
     )
     m = pattern.match(s.strip())
     if not m:
         return 0
-    hours = int(m.group(1) or 0)
-    minutes = int(m.group(2) or 0)
-    seconds = int(float(m.group(3) or 0))
-    return hours * 3600 + minutes * 60 + seconds
+    days = int(m.group(1) or 0)
+    hours = int(m.group(2) or 0)
+    minutes = int(m.group(3) or 0)
+    seconds = int(float(m.group(4) or 0))
+    return days * 86400 + hours * 3600 + minutes * 60 + seconds
 
 
 def format_duration_hms(secs: int) -> str:

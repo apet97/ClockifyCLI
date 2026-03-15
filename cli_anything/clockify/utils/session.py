@@ -135,6 +135,11 @@ class Session:
             return self.workspace_id
 
         workspaces = backend.list_workspaces()  # type: ignore[attr-defined]
+        if not workspaces:
+            raise ValueError(
+                "No workspaces found for this API key. "
+                "Create a workspace at https://clockify.me or check your API key."
+            )
         if len(workspaces) == 1:
             self.workspace_id = workspaces[0]["id"]
             return self.workspace_id
@@ -151,5 +156,8 @@ class Session:
         """Return user_id, fetching from API on first call and caching."""
         if not self._user_id:
             user = backend.get_current_user()  # type: ignore[attr-defined]
-            self._user_id = user["id"]
+            uid = user.get("id") if isinstance(user, dict) else None
+            if not uid:
+                raise ValueError("Failed to resolve user ID from API response")
+            self._user_id = uid
         return self._user_id

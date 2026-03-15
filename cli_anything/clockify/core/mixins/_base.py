@@ -257,14 +257,15 @@ class _BackendBase:
                 print(f"[clockify] GET {url} (page {page}) -> {resp.status_code} ({elapsed:.3f}s)", file=sys.stderr)
             self._log_rate_limit(resp)
             data = self._handle_response(resp, entity)
+            page_items: list = []
             if isinstance(data, list):
-                results.extend(data)
+                page_items = data
             elif isinstance(data, dict):
                 # Some endpoints return {data: [...]}
-                items = data.get("data") or data.get("items") or []
-                results.extend(items)
+                page_items = data.get("data") or data.get("items") or []
+            results.extend(page_items)
             last_page = resp.headers.get("Last-Page", "false").lower() == "true"
-            if last_page or not data:
+            if last_page or not page_items:
                 break
             page += 1
             if page > self._MAX_PAGES:
