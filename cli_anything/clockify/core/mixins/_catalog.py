@@ -82,7 +82,10 @@ class TagsMixin:
 
     def create_tag(self, workspace_id: str, data: dict) -> dict:
         """POST /v1/workspaces/{workspaceId}/tags"""
-        return self._post(f"/workspaces/{workspace_id}/tags", data)  # type: ignore[attr-defined]
+        return self._post(  # type: ignore[attr-defined]
+            f"/workspaces/{workspace_id}/tags", data,
+            entity="tag",
+        )
 
     def update_tag(self, workspace_id: str, tag_id: str, data: dict) -> dict:
         """PUT /v1/workspaces/{workspaceId}/tags/{id}"""

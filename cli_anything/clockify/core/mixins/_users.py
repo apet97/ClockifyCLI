@@ -51,6 +51,7 @@ class UsersMixin:
             self._url(f"/workspaces/{workspace_id}/users"),  # type: ignore[attr-defined]
             params={"send-email": str(send_email).lower()},
             json_data=data,
+            entity="workspace user invitation",
         )
 
     def update_user_status(self, workspace_id: str, user_id: str, data: dict) -> dict:
@@ -78,7 +79,10 @@ class UsersMixin:
 
     def filter_users(self, workspace_id: str, data: dict) -> dict:
         """POST /v1/workspaces/{workspaceId}/users/info"""
-        return self._post(f"/workspaces/{workspace_id}/users/info", data)  # type: ignore[attr-defined]
+        return self._post(  # type: ignore[attr-defined]
+            f"/workspaces/{workspace_id}/users/info", data,
+            entity="users filter",
+        )
 
     def get_user_managers(
         self,
@@ -110,7 +114,8 @@ class UsersMixin:
     def add_manager_role(self, workspace_id: str, user_id: str, data: dict) -> dict:
         """POST /v1/workspaces/{workspaceId}/users/{userId}/roles"""
         return self._post(  # type: ignore[attr-defined]
-            f"/workspaces/{workspace_id}/users/{user_id}/roles", data
+            f"/workspaces/{workspace_id}/users/{user_id}/roles", data,
+            entity=f"user {user_id} role",
         )
 
     def remove_manager_role(self, workspace_id: str, user_id: str, data: dict) -> dict:

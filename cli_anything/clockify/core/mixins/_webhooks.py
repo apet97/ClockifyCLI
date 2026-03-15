@@ -50,6 +50,7 @@ class WebhooksMixin:
             self._url(f"/workspaces/{workspace_id}/webhooks/{webhook_id}/logs"),  # type: ignore[attr-defined]
             params=params or None,
             json_data=data or {},
+            entity=f"webhook {webhook_id} logs",
         )
 
     def list_addon_webhooks(self, workspace_id: str, addon_id: str) -> dict:

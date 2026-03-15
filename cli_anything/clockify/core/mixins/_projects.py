@@ -107,7 +107,10 @@ class ProjectsMixin:
 
     def create_project(self, workspace_id: str, data: dict) -> dict:
         """POST /v1/workspaces/{workspaceId}/projects"""
-        return self._post(f"/workspaces/{workspace_id}/projects", data)  # type: ignore[attr-defined]
+        return self._post(  # type: ignore[attr-defined]
+            f"/workspaces/{workspace_id}/projects", data,
+            entity="project",
+        )
 
     def update_project(self, workspace_id: str, project_id: str, data: dict) -> dict:
         """PUT /v1/workspaces/{workspaceId}/projects/{projectId}"""
@@ -150,7 +153,8 @@ class ProjectsMixin:
     def assign_project_members(self, workspace_id: str, project_id: str, data: dict) -> dict:
         """POST /v1/workspaces/{workspaceId}/projects/{projectId}/memberships"""
         return self._post(  # type: ignore[attr-defined]
-            f"/workspaces/{workspace_id}/projects/{project_id}/memberships", data
+            f"/workspaces/{workspace_id}/projects/{project_id}/memberships", data,
+            entity=f"project {project_id} memberships",
         )
 
     def update_project_user_cost_rate(self, workspace_id: str, project_id: str, user_id: str, data: dict) -> dict:

@@ -28,7 +28,10 @@ class ExpensesMixin:
 
     def create_expense(self, workspace_id: str, data: dict) -> dict:
         """POST /v1/workspaces/{workspaceId}/expenses"""
-        return self._post(f"/workspaces/{workspace_id}/expenses", data)  # type: ignore[attr-defined]
+        return self._post(  # type: ignore[attr-defined]
+            f"/workspaces/{workspace_id}/expenses", data,
+            entity="expense",
+        )
 
     def get_expense(self, workspace_id: str, expense_id: str) -> dict:
         """GET /v1/workspaces/{workspaceId}/expenses/{expenseId}"""
@@ -76,7 +79,10 @@ class ExpensesMixin:
 
     def create_expense_category(self, workspace_id: str, data: dict) -> dict:
         """POST /v1/workspaces/{workspaceId}/expenses/categories"""
-        return self._post(f"/workspaces/{workspace_id}/expenses/categories", data)  # type: ignore[attr-defined]
+        return self._post(  # type: ignore[attr-defined]
+            f"/workspaces/{workspace_id}/expenses/categories", data,
+            entity="expense category",
+        )
 
     def update_expense_category(self, workspace_id: str, category_id: str, data: dict) -> dict:
         """PUT /v1/workspaces/{workspaceId}/expenses/categories/{categoryId}"""
