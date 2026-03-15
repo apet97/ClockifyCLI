@@ -9,7 +9,7 @@ from cli_anything.clockify.utils.time_utils import (
 )
 from ._helpers import (
     _ws, _user, _make_backend, _out,
-    _resolve_project_id, _confirm_destructive, handle_errors,
+    _resolve_project_id, _confirm_destructive, _parse_custom_fields, handle_errors,
 )
 
 
@@ -42,14 +42,7 @@ def timer_start(ctx, description, project, tags, task, at, billable, entry_type,
     uid = _user(ctx)
     project_id = _resolve_project_id(b, ws, project) if project else None
     start = parse_datetime_arg(at) if at else None
-    cf = None
-    if custom_fields:
-        cf = []
-        for pair in custom_fields:
-            if "=" not in pair:
-                raise click.UsageError(f"Custom field must be FIELD_ID=VALUE, got: {pair}")
-            fid, val = pair.split("=", 1)
-            cf.append({"customFieldId": fid, "value": val})
+    cf = _parse_custom_fields(custom_fields) if custom_fields else None
     entry = b.start_timer(
         ws, uid,
         description=description,

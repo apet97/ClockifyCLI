@@ -9,7 +9,7 @@ class UsersMixin:
         params: dict = {}
         if include_memberships is not None:
             params["include-memberships"] = str(include_memberships).lower()
-        return self._get("/user", params=params or None)  # type: ignore[attr-defined]
+        return self._get("/user", params=params or None, entity="current user")  # type: ignore[attr-defined]
 
     def list_users(self, workspace_id: str, *, name: Optional[str] = None, email: Optional[str] = None, project_id: Optional[str] = None, status: Optional[str] = None, memberships: Optional[str] = None, include_roles: Optional[bool] = None, account_statuses: Optional[str] = None, sort_column: Optional[str] = None, sort_order: Optional[str] = None, page: Optional[int] = None, page_size: Optional[int] = None) -> list:
         """GET /v1/workspaces/{workspaceId}/users"""

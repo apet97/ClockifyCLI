@@ -442,6 +442,7 @@ def test_approval_resubmit_for_user(runner):
 
 # ── Part 2 — Enum verifications ───────────────────────────────────────
 
+@responses.activate
 def test_webhooks_create_trigger_choices(runner):
     """webhooks create --event accepts valid webhook event names."""
     result = runner.invoke(main, [
@@ -453,6 +454,7 @@ def test_webhooks_create_trigger_choices(runner):
     assert "Invalid value" in result.output or "invalid choice" in result.output.lower()
 
 
+@responses.activate
 def test_invoices_status_choices(runner):
     """invoices status --status accepts UNSENT and OVERDUE."""
     result = runner.invoke(main, [
@@ -462,6 +464,7 @@ def test_invoices_status_choices(runner):
     assert result.exit_code != 0
 
 
+@responses.activate
 def test_tasks_update_status_all(runner):
     """tasks update --status accepts ALL."""
     # Just verify the choice passes validation (no API call needed for help check)
@@ -472,6 +475,7 @@ def test_tasks_update_status_all(runner):
     assert "ALL" in result.output
 
 
+@responses.activate
 def test_custom_fields_create_dropdown_single(runner):
     """custom-fields create --type accepts DROPDOWN_SINGLE."""
     result = runner.invoke(main, [
@@ -482,6 +486,7 @@ def test_custom_fields_create_dropdown_single(runner):
     assert "DROPDOWN_MULTIPLE" in result.output
 
 
+@responses.activate
 def test_reports_summary_group_by_choices(runner):
     """reports summary --group-by accepts DATE, WEEK, MONTH, TASK."""
     result = runner.invoke(main, [
@@ -494,6 +499,7 @@ def test_reports_summary_group_by_choices(runner):
     assert "MONTH" in result.output
 
 
+@responses.activate
 def test_entities_type_is_choice(runner):
     """entities created --type rejects invalid document type."""
     result = runner.invoke(main, [
@@ -505,6 +511,7 @@ def test_entities_type_is_choice(runner):
     assert result.exit_code != 0
 
 
+@responses.activate
 def test_time_off_policies_icon_choice(runner):
     """time-off policies create --icon appears in help."""
     result = runner.invoke(main, [
@@ -692,7 +699,7 @@ def test_commands_manifest(runner):
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
     assert isinstance(data, list)
-    assert len(data) >= 161
+    assert len(data) == 161, f"Expected 161 commands, got {len(data)}"
     groups = {entry["group"] for entry in data}
     assert "entries" in groups
     assert "projects" in groups

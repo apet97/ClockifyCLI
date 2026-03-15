@@ -307,6 +307,10 @@ def expenses_receipt(ctx, expense_id, file_id, output, as_base64, use_json):
     else:
         if not output:
             raise click.UsageError("--output is required when --base64 is not set")
+        import os
+        out_dir = os.path.dirname(output)
+        if out_dir and not os.path.isdir(out_dir):
+            raise click.UsageError(f"Output directory does not exist: {out_dir}")
         with open(output, "wb") as fh:
             fh.write(data)
         if ctx.obj.get("json"):

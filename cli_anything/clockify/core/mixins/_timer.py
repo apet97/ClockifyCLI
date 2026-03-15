@@ -52,6 +52,7 @@ class TimerMixin:
         return self._patch(  # type: ignore[attr-defined]
             f"/workspaces/{workspace_id}/user/{user_id}/time-entries",
             data={"end": now_iso()},
+            entity="timer",
         )
 
     def get_running_timer(self, workspace_id: str, user_id: str) -> Optional[dict]:
@@ -63,6 +64,7 @@ class TimerMixin:
             data = self._get(  # type: ignore[attr-defined]
                 f"/workspaces/{workspace_id}/time-entries/status/in-progress",
                 params={"user-id": user_id},
+                entity="running timer",
             )
         except ClockifyAPIError as e:
             if e.status_code == 404:

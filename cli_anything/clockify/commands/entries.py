@@ -11,7 +11,7 @@ from cli_anything.clockify.utils.time_utils import (
 )
 from ._helpers import (
     _ws, _user, _make_backend, _out,
-    _resolve_project_id, _confirm_destructive, handle_errors,
+    _resolve_project_id, _confirm_destructive, _parse_custom_fields, handle_errors,
 )
 
 
@@ -168,13 +168,7 @@ def entries_add(ctx, start, end, description, project, tags, task, billable, ent
     if entry_type:
         body["type"] = entry_type
     if custom_fields:
-        cf_list = []
-        for cf in custom_fields:
-            if "=" not in cf:
-                raise click.UsageError(f"Custom field must be FIELD_ID=VALUE, got: {cf}")
-            field_id, value = cf.split("=", 1)
-            cf_list.append({"customFieldId": field_id, "value": value})
-        body["customFields"] = cf_list
+        body["customFields"] = _parse_custom_fields(custom_fields)
     entry = b.create_entry(ws, uid, body, from_entry=from_entry)
     _out(ctx, entry, lambda d: repl_skin.success(
         f"Entry created [{d.get('id', '')}]"
@@ -220,13 +214,7 @@ def entries_add_direct(ctx, start, end, description, project, tags, task, billab
     if entry_type:
         body["type"] = entry_type
     if custom_fields:
-        cf_list = []
-        for cf in custom_fields:
-            if "=" not in cf:
-                raise click.UsageError(f"Custom field must be FIELD_ID=VALUE, got: {cf}")
-            field_id, value = cf.split("=", 1)
-            cf_list.append({"customFieldId": field_id, "value": value})
-        body["customFields"] = cf_list
+        body["customFields"] = _parse_custom_fields(custom_fields)
     entry = b.create_time_entry_direct(ws, body)
     _out(ctx, entry, lambda d: repl_skin.success(
         f"Entry created (direct) [{d.get('id', '')}]"
@@ -275,13 +263,7 @@ def entries_update(ctx, entry_id, description, start, end, project, tags, task, 
     if entry_type:
         body["type"] = entry_type
     if custom_fields:
-        cf_list = []
-        for cf in custom_fields:
-            if "=" not in cf:
-                raise click.UsageError(f"Custom field must be FIELD_ID=VALUE, got: {cf}")
-            field_id, value = cf.split("=", 1)
-            cf_list.append({"customFieldId": field_id, "value": value})
-        body["customFields"] = cf_list
+        body["customFields"] = _parse_custom_fields(custom_fields)
     data = b.update_entry(ws, entry_id, body)
     _out(ctx, data, lambda d: repl_skin.success(f"Entry {entry_id} updated."))
 
@@ -402,13 +384,7 @@ def entries_bulk_update(ctx, ids, project, billable, tags, description, start, e
     if entry_type:
         shared["type"] = entry_type
     if custom_fields:
-        cf_list = []
-        for cf in custom_fields:
-            if "=" not in cf:
-                raise click.UsageError(f"Custom field must be FIELD_ID=VALUE, got: {cf}")
-            field_id, value = cf.split("=", 1)
-            cf_list.append({"customFieldId": field_id, "value": value})
-        shared["customFields"] = cf_list
+        shared["customFields"] = _parse_custom_fields(custom_fields)
     # Spec requires an array of objects, each with an "id" field
     updates = [{"id": entry_id, **shared} for entry_id in ids]
     data = b.bulk_update_entries(ws, uid, updates, hydrated=True if hydrated else None)

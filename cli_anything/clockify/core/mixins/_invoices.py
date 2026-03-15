@@ -111,7 +111,8 @@ class InvoicesMixin:
     def update_invoice_settings(self, workspace_id: str, data: dict) -> dict:
         """PUT /v1/workspaces/{workspaceId}/invoices/settings"""
         return self._put(  # type: ignore[attr-defined]
-            f"/workspaces/{workspace_id}/invoices/settings", data
+            f"/workspaces/{workspace_id}/invoices/settings", data,
+            entity="invoice settings",
         )
 
     def export_invoice(self, workspace_id: str, invoice_id: str, *, user_locale: Optional[str] = None) -> bytes:

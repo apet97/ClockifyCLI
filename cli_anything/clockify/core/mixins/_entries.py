@@ -120,4 +120,5 @@ class EntriesMixin:
         return self._patch(  # type: ignore[attr-defined]
             f"/workspaces/{workspace_id}/time-entries/invoiced",
             data={"timeEntryIds": entry_ids, "invoiced": invoiced},
+            entity="time entries (invoiced)",
         )

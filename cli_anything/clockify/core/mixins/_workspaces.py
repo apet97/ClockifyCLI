@@ -9,7 +9,7 @@ class WorkspacesMixin:
         params: dict = {}
         if roles:
             params["roles"] = ",".join(roles)
-        data = self._get("/workspaces", params=params or None)  # type: ignore[attr-defined]
+        data = self._get("/workspaces", params=params or None, entity="workspaces")  # type: ignore[attr-defined]
         return data if isinstance(data, list) else []
 
     def get_workspace(self, workspace_id: str) -> dict:

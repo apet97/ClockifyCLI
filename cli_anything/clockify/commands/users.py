@@ -301,6 +301,8 @@ def users_upload_photo(ctx, file_path, content_type, use_json):
     if use_json:
         ctx.obj["json"] = True
     import os
+    if not os.path.isfile(file_path):
+        raise click.UsageError(f"File not found: {file_path}")
     b = _make_backend(ctx)
     with open(file_path, "rb") as fh:
         file_data = fh.read()

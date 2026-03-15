@@ -85,6 +85,19 @@ def _resolve_project_id(backend, workspace_id: str, value: str) -> str:
     return projects[0]["id"]
 
 
+def _parse_custom_fields(raw_fields: tuple) -> list[dict]:
+    """Parse --custom-field FIELD_ID=VALUE pairs."""
+    result = []
+    for pair in raw_fields:
+        if "=" not in pair:
+            raise click.UsageError(f"Custom field must be FIELD_ID=VALUE, got: {pair}")
+        fid, val = pair.split("=", 1)
+        if not fid.strip():
+            raise click.UsageError(f"Custom field ID cannot be empty in: {pair}")
+        result.append({"customFieldId": fid, "value": val})
+    return result
+
+
 def _confirm_destructive(ctx: click.Context, name: str, confirm: bool) -> None:
     """Prompt for confirmation unless --confirm or --json mode."""
     if confirm or ctx.obj.get("json"):

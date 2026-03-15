@@ -460,6 +460,7 @@ def test_http_adapter_mounted(backend):
 
 # ── JSON option error handling ───────────────────────────────────────
 
+@responses.activate
 def test_extra_body_invalid_json(runner):
     """--extra-body with invalid JSON produces a clean error."""
     from click.testing import CliRunner
@@ -474,6 +475,7 @@ def test_extra_body_invalid_json(runner):
 
 # ── Init error clean message ────────────────────────────────────────
 
+@responses.activate
 def test_init_error_clean_message(monkeypatch):
     """Invoking a command without API key produces a clean error, not a traceback."""
     from click.testing import CliRunner
@@ -933,3 +935,95 @@ def test_create_webhook_entity_in_404(backend):
     with pytest.raises(ClockifyAPIError) as exc_info:
         backend.create_webhook(WS_ID, {"name": "H", "url": "https://x.com"})
     assert "webhook" in str(exc_info.value).lower()
+
+
+# ── Round 4: Code Quality & Enterprise Hardening ─────────────────────
+
+# ── C2: Malformed JSON response (covers A1) ──────────────────────────
+
+@responses.activate
+def test_malformed_json_response_raises(backend):
+    """200 with non-JSON body should raise ClockifyAPIError with 'Invalid JSON'."""
+    responses.add(responses.GET, f"{BASE_URL}/user",
+                  body="not json", status=200,
+                  content_type="application/json")
+    with pytest.raises(ClockifyAPIError) as exc_info:
+        backend.get_current_user()
+    assert "Invalid JSON" in str(exc_info.value)
+
+
+# ── C3: 400 Bad Request produces clean error (covers A2) ─────────────
+
+@responses.activate
+def test_400_raises_api_error_with_message(backend):
+    """400 with JSON message should produce ClockifyAPIError with that message."""
+    responses.add(responses.GET, f"{BASE_URL}/user",
+                  json={"message": "Validation failed: name is required"},
+                  status=400)
+    with pytest.raises(ClockifyAPIError) as exc_info:
+        backend.get_current_user()
+    assert exc_info.value.status_code == 400
+    assert "name is required" in str(exc_info.value)
+
+
+# ── C4: Empty custom field ID rejected (covers B1) ───────────────────
+
+@responses.activate
+def test_custom_field_empty_id_rejected():
+    """--custom-field '=somevalue' should fail with 'empty' error."""
+    from click.testing import CliRunner
+    from cli_anything.clockify.clockify_cli import main
+    # Mock user endpoint so backend init succeeds
+    responses.add(responses.GET, f"{BASE_URL}/user", json=make_user(), status=200,
+                  match_querystring=False)
+    r = CliRunner().invoke(main, [
+        "--api-key", API_KEY, "--workspace", WS_ID,
+        "timer", "start", "--custom-field", "=somevalue",
+    ])
+    assert r.exit_code != 0
+    assert "empty" in r.output.lower() or "FIELD_ID" in r.output
+
+
+# ── C5: File-not-found in upload (covers B2) ─────────────────────────
+
+def test_upload_photo_file_not_found():
+    """upload-photo with nonexistent file should fail with 'not found' error."""
+    from click.testing import CliRunner
+    from cli_anything.clockify.clockify_cli import main
+    r = CliRunner().invoke(main, [
+        "--api-key", API_KEY, "--workspace", WS_ID,
+        "users", "upload-photo", "/nonexistent/photo.jpg",
+    ])
+    assert r.exit_code != 0
+    assert "not found" in r.output.lower() or "File" in r.output
+
+
+# ── C6: 409 Conflict produces clean error ─────────────────────────────
+
+@responses.activate
+def test_409_raises_api_error(backend):
+    """409 with JSON message should produce ClockifyAPIError(409)."""
+    responses.add(responses.POST, f"{BASE_URL}/workspaces/{WS_ID}/clients",
+                  json={"message": "Client already exists"}, status=409)
+    with pytest.raises(ClockifyAPIError) as exc_info:
+        backend.create_client(WS_ID, {"name": "Dup"})
+    assert exc_info.value.status_code == 409
+    assert "already exists" in str(exc_info.value)
+
+
+# ── C7: Invoice export to bad path (covers B3) ───────────────────────
+
+@responses.activate
+def test_invoice_export_bad_output_path():
+    """Invoice export to nonexistent directory should fail with 'directory' error."""
+    from click.testing import CliRunner
+    from cli_anything.clockify.clockify_cli import main
+    responses.add(responses.GET, f"{BASE_URL}/workspaces/{WS_ID}/invoices/inv123/export",
+                  body=b"PDF", status=200, match_querystring=False)
+    r = CliRunner().invoke(main, [
+        "--api-key", API_KEY, "--workspace", WS_ID,
+        "invoices", "export", "inv123", "--output", "/nonexistent/dir/out.pdf",
+        "--user-locale", "en",
+    ])
+    assert r.exit_code != 0
+    assert "directory" in r.output.lower() or "not exist" in r.output.lower()

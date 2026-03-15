@@ -82,12 +82,23 @@ class _BackendBase:
             except Exception:
                 body = resp.text
             raise ClockifyAPIError(resp.status_code, str(body), body)
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except requests.HTTPError:
+            try:
+                body = resp.json()
+            except Exception:
+                body = resp.text
+            msg = body.get("message", str(body)) if isinstance(body, dict) else str(body)
+            raise ClockifyAPIError(resp.status_code, msg, body)
         if raw:
             return resp.content
         if resp.status_code == 204 or not resp.content:
             return {}
-        return resp.json()
+        try:
+            return resp.json()
+        except (ValueError, Exception) as e:
+            raise ClockifyAPIError(resp.status_code, f"Invalid JSON in API response: {e}")
 
     @staticmethod
     def _deep_merge(base: dict, override: dict) -> dict:

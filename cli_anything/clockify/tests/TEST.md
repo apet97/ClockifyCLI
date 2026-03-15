@@ -2,9 +2,9 @@
 
 ## Summary
 
-**289 tests · 27 files · ~0.5s runtime · all mocked (no network)**
+**349 tests · 27 files · ~1s runtime · all mocked (no network)**
 
-All tests pass as of 2026-03-14 after the God Object refactor (monolithic `clockify_backend.py` → 16 domain mixins; monolithic `clockify_cli.py` → 17 command modules).
+All tests pass as of 2026-03-15 after Round 4 (Code Quality & Enterprise Hardening): response handling hardening, input validation, file I/O safety checks, and 6 new tests.
 
 ## Test Strategy
 
@@ -22,15 +22,16 @@ All tests pass as of 2026-03-14 after the God Object refactor (monolithic `clock
 - Test IDs use 25+ chars or non-hex chars to bypass `_resolve_project_id` name lookup (e.g., `WS_ID = "ws111111111111111111111111"`)
 - `conftest.py` provides `session`, `backend`, `runner` fixtures and `make_*` factories
 - `--api-key` and `--workspace` passed explicitly on every CLI invocation (no env leak between tests)
+- All tests that invoke CLI commands use `@responses.activate` even if Click validates choices before HTTP (safety net)
 
 ## Domain Coverage Table
 
 | File | Tests | Covers |
 |------|------:|--------|
+| `test_backend.py` | 80 | HTTP infrastructure: retry on 429/ConnectionError, pagination, error mapping (401-500+), dry-run, verbose, debug redaction, Retry-After, timeouts, rate-limit logging, profiles, config permissions, malformed JSON, 400/409 clean errors, empty custom field ID, file-not-found upload, bad export path |
 | `test_parity_gaps.py` | 61 | Deep coverage of groups, webhooks, approval, time-off, scheduling, expenses, users, reports, invoices, misc |
-| `test_cli_coverage.py` | 39 | Cross-domain coverage for commands missing from dedicated files |
+| `test_cli_coverage.py` | 39 | Cross-domain coverage: enum validations, MCP hardening, manifest assertion (exact 161 commands) |
 | `test_cli_gaps_2.py` | 21 | Additional gap-fill: shared-reports, entities, entries bulk ops |
-| `test_backend.py` | 18 | HTTP infrastructure: retry on 429, deep-merge, pagination, error mapping, dry-run, verbose |
 | `test_invoices.py` | 9 | Invoice CRUD, duplicate, export, status, filter, settings |
 | `test_entries.py` | 9 | Time entry list, get, add, update, delete, today |
 | `test_projects.py` | 9 | Project list, get, create, update, delete, estimate, members |
@@ -54,14 +55,27 @@ All tests pass as of 2026-03-14 after the God Object refactor (monolithic `clock
 | `test_entries_extra.py` | 5 | Entry edge cases: duplicate, bulk-delete, mark-invoiced |
 | `test_workspaces.py` | 4 | Workspace list, use, invite, create |
 | `test_entities.py` | 4 | Entity created/updated/deleted audit |
-| **Total** | **289** | |
+| **Total** | **349** | |
+
+## Round 4 Changes (2026-03-15)
+
+### New Tests Added (6)
+- `test_malformed_json_response_raises` — 200 with non-JSON body raises `ClockifyAPIError`
+- `test_400_raises_api_error_with_message` — 400 response produces clean error with API message
+- `test_custom_field_empty_id_rejected` — `--custom-field =value` rejected with "empty" error
+- `test_upload_photo_file_not_found` — nonexistent photo path produces "not found" error
+- `test_409_raises_api_error` — 409 Conflict produces `ClockifyAPIError(409)` with message
+- `test_invoice_export_bad_output_path` — export to nonexistent directory produces "directory" error
+
+### Test Hardening
+- Added `@responses.activate` to 9 tests that were missing it (7 enum + 2 backend tests)
+- Changed manifest assertion from `>= 161` to exact `== 161`
 
 ## Known Gaps
 
-- **No dedicated mixin unit tests** — `core/mixins/*.py` is covered indirectly through CLI tests. A failure in a mixin method will show up as a CLI test failure, but the mixin itself is not tested in isolation.
-- **No REPL integration tests** — `_run_repl` is not tested; it's a prompt_toolkit loop that's hard to drive in unit tests.
-- **No error path completeness** — 401, 403, 404, 429 retry, and 500 errors are tested in `test_backend.py` at the HTTP layer, but not exhaustively for every command.
-- **`commands` manifest count** — `test_cli_coverage.py` asserts `len(data) > 50`, not an exact count. The actual count is 161 (as of 2026-03-14 after recursive walker fix).
+- **No dedicated mixin unit tests** — `core/mixins/*.py` is covered indirectly through CLI tests.
+- **No REPL integration tests** — `_run_repl` is a prompt_toolkit loop that's hard to drive in unit tests.
+- **No 204 No Content explicit test** — tested indirectly via DELETE operations.
 
 ## Running Tests
 
@@ -78,10 +92,21 @@ cd /Users/15x/Downloads/anyCLI/CLI-Anything/clockify/agent-harness
 .venv/bin/pytest cli_anything/clockify/tests/ -v -s
 ```
 
-## Results (2026-03-14)
+## Results (2026-03-15)
 
 ```
-289 passed, 77 warnings in 0.53s
+349 passed, 99 warnings in ~1s
 ```
 
 Warnings are all `DeprecationWarning: Argument 'match_querystring' is deprecated` from the `responses` library — tests use `match_querystring=False` (legacy positional arg style). No functional impact.
+
+## Security Audit (2026-03-15)
+
+Full audit passed:
+- No hardcoded secrets/API keys in source code
+- No `verify=False`, `eval()`, `exec()`, `subprocess` in source code
+- No tracked sensitive files (`.env`, `.pem`, `.key`)
+- All dependencies are well-known, mature packages
+- API key transmitted via `X-Api-Key` header only (never `Authorization`)
+- Config files created with `0o600` permissions
+- Sensitive fields redacted in debug/dry-run output
