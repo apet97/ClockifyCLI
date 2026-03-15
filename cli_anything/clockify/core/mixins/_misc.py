@@ -150,14 +150,14 @@ class CustomFieldsMixin:
 class EntitiesMixin:
     def list_created_entities(
         self, workspace_id: str, entity_type: str, start: str, end: str,
-        *, page: Optional[int] = None, page_size: Optional[int] = None,
+        *, page: Optional[int] = None, limit: Optional[int] = None,
     ) -> list:
         """GET /v1/workspaces/{workspaceId}/entities/created"""
-        params: dict = {"entityType": entity_type, "start": start, "end": end}
+        params: dict = {"type": entity_type, "start": start, "end": end}
         if page is not None:
             params["page"] = str(page)
-        if page_size is not None:
-            params["page-size"] = str(page_size)
+        if limit is not None:
+            params["limit"] = str(limit)
         data = self._get(  # type: ignore[attr-defined]
             f"/workspaces/{workspace_id}/entities/created",
             params=params,
@@ -167,14 +167,14 @@ class EntitiesMixin:
 
     def list_deleted_entities(
         self, workspace_id: str, entity_type: str, start: str, end: str,
-        *, page: Optional[int] = None, page_size: Optional[int] = None,
+        *, page: Optional[int] = None, limit: Optional[int] = None,
     ) -> list:
         """GET /v1/workspaces/{workspaceId}/entities/deleted"""
-        params: dict = {"entityType": entity_type, "start": start, "end": end}
+        params: dict = {"type": entity_type, "start": start, "end": end}
         if page is not None:
             params["page"] = str(page)
-        if page_size is not None:
-            params["page-size"] = str(page_size)
+        if limit is not None:
+            params["limit"] = str(limit)
         data = self._get(  # type: ignore[attr-defined]
             f"/workspaces/{workspace_id}/entities/deleted",
             params=params,
@@ -184,14 +184,14 @@ class EntitiesMixin:
 
     def list_updated_entities(
         self, workspace_id: str, entity_type: str, start: str, end: str,
-        *, page: Optional[int] = None, page_size: Optional[int] = None,
+        *, page: Optional[int] = None, limit: Optional[int] = None,
     ) -> list:
         """GET /v1/workspaces/{workspaceId}/entities/updated"""
-        params: dict = {"entityType": entity_type, "start": start, "end": end}
+        params: dict = {"type": entity_type, "start": start, "end": end}
         if page is not None:
             params["page"] = str(page)
-        if page_size is not None:
-            params["page-size"] = str(page_size)
+        if limit is not None:
+            params["limit"] = str(limit)
         data = self._get(  # type: ignore[attr-defined]
             f"/workspaces/{workspace_id}/entities/updated",
             params=params,

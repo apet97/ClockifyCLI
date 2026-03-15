@@ -56,10 +56,12 @@ def tasks_list(ctx, project, name, is_active, strict_name_search, sort_column, s
 @click.option("--status", default="ACTIVE", type=click.Choice(["ACTIVE", "DONE", "ALL"]),
               help="Initial task status (default: ACTIVE)")
 @click.option("--billable/--no-billable", default=None, help="Set billable status")
+@click.option("--contains-assignee/--no-contains-assignee", "contains_assignee",
+              default=None, help="Include assignee info in response (default: true)")
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def tasks_create(ctx, name, project, assignee_ids, user_group_ids, estimate, budget_estimate, status, billable, use_json):
+def tasks_create(ctx, name, project, assignee_ids, user_group_ids, estimate, budget_estimate, status, billable, contains_assignee, use_json):
     """Create a task."""
     if use_json:
         ctx.obj["json"] = True
@@ -77,7 +79,7 @@ def tasks_create(ctx, name, project, assignee_ids, user_group_ids, estimate, bud
         body["budgetEstimate"] = budget_estimate
     if billable is not None:
         body["billable"] = billable
-    data = b.create_task(ws, proj_id, body)
+    data = b.create_task(ws, proj_id, body, contains_assignee=contains_assignee)
     _out(ctx, data, lambda d: repl_skin.success(
         f"Task created: {d.get('name', '')} [{d.get('id', '')}]"
     ))

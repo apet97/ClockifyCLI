@@ -25,10 +25,6 @@ def users():
 @click.option("--status", default=None,
               type=click.Choice(["PENDING", "ACTIVE", "DECLINED", "INACTIVE", "ALL"]),
               help="Filter by membership status")
-@click.option("--role", default=None,
-              type=click.Choice(["WORKSPACE_ADMIN", "OWNER", "TEAM_MANAGER",
-                                 "PROJECT_MANAGER"]),
-              help="Filter by role")
 @click.option("--memberships", default=None,
               type=click.Choice(["ALL", "NONE", "WORKSPACE", "PROJECT", "USERGROUP"]),
               help="Filter by membership type")
@@ -46,7 +42,7 @@ def users():
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def users_list(ctx, name, email, project_id, status, role, memberships, include_roles, account_statuses, sort_column, sort_order, page, page_size, limit, use_json):
+def users_list(ctx, name, email, project_id, status, memberships, include_roles, account_statuses, sort_column, sort_order, page, page_size, limit, use_json):
     """List workspace members."""
     if use_json:
         ctx.obj["json"] = True

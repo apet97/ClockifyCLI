@@ -41,11 +41,15 @@ class TasksMixin:
             entity=f"task {task_id}",
         )
 
-    def create_task(self, workspace_id: str, project_id: str, data: dict) -> dict:
+    def create_task(
+        self, workspace_id: str, project_id: str, data: dict,
+        *, contains_assignee: Optional[bool] = None,
+    ) -> dict:
         """POST /v1/workspaces/{workspaceId}/projects/{projectId}/tasks"""
-        return self._post(  # type: ignore[attr-defined]
-            f"/workspaces/{workspace_id}/projects/{project_id}/tasks", data
-        )
+        path = f"/workspaces/{workspace_id}/projects/{project_id}/tasks"
+        if contains_assignee is not None:
+            path += f"?contains-assignee={str(contains_assignee).lower()}"
+        return self._post(path, data)  # type: ignore[attr-defined]
 
     def update_task(
         self,

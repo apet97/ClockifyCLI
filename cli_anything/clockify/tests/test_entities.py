@@ -41,7 +41,7 @@ def test_list_created_entities(backend):
     )
     assert len(result) == 1
     req = responses.calls[0].request
-    assert "entityType=TIME_ENTRY" in req.url
+    assert "type=TIME_ENTRY" in req.url
     assert "start=" in req.url
 
 
@@ -61,7 +61,7 @@ def test_list_deleted_entities(backend):
     )
     assert len(result) == 1
     req = responses.calls[0].request
-    assert "entityType=PROJECT" in req.url
+    assert "type=PROJECT" in req.url
 
 
 @responses.activate

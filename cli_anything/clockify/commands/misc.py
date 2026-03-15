@@ -524,13 +524,12 @@ _ENTITY_DOC_TYPES = [
               help="Entity document type")
 @click.option("--start", required=True, help="Start date (YYYY-MM-DD)")
 @click.option("--end", required=True, help="End date (YYYY-MM-DD)")
-@click.option("--limit", default=0, type=int, help="Max results (0=all)")
 @click.option("--page", default=None, type=int, help="Page number")
-@click.option("--page-size", "page_size", default=None, type=int, help="Page size")
+@click.option("--limit", default=None, type=int, help="Max results per page (1-5000, default 50)")
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def entities_created(ctx, entity_type, start, end, limit, page, page_size, use_json):
+def entities_created(ctx, entity_type, start, end, page, limit, use_json):
     """List created entities in a date range."""
     if use_json:
         ctx.obj["json"] = True
@@ -538,9 +537,7 @@ def entities_created(ctx, entity_type, start, end, limit, page, page_size, use_j
     ws = _ws(ctx)
     start_iso = parse_date_arg(start) + "T00:00:00Z"
     end_iso = parse_date_arg(end) + "T23:59:59Z"
-    data = b.list_created_entities(ws, entity_type, start_iso, end_iso, page=page, page_size=page_size)
-    if limit > 0:
-        data = data[:limit]
+    data = b.list_created_entities(ws, entity_type, start_iso, end_iso, page=page, limit=limit)
     _out(ctx, data, fmt.print_entity_changes)
 
 
@@ -550,13 +547,12 @@ def entities_created(ctx, entity_type, start, end, limit, page, page_size, use_j
               help="Entity document type")
 @click.option("--start", required=True, help="Start date (YYYY-MM-DD)")
 @click.option("--end", required=True, help="End date (YYYY-MM-DD)")
-@click.option("--limit", default=0, type=int, help="Max results (0=all)")
 @click.option("--page", default=None, type=int, help="Page number")
-@click.option("--page-size", "page_size", default=None, type=int, help="Page size")
+@click.option("--limit", default=None, type=int, help="Max results per page (1-5000, default 50)")
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def entities_deleted(ctx, entity_type, start, end, limit, page, page_size, use_json):
+def entities_deleted(ctx, entity_type, start, end, page, limit, use_json):
     """List deleted entities in a date range."""
     if use_json:
         ctx.obj["json"] = True
@@ -564,9 +560,7 @@ def entities_deleted(ctx, entity_type, start, end, limit, page, page_size, use_j
     ws = _ws(ctx)
     start_iso = parse_date_arg(start) + "T00:00:00Z"
     end_iso = parse_date_arg(end) + "T23:59:59Z"
-    data = b.list_deleted_entities(ws, entity_type, start_iso, end_iso, page=page, page_size=page_size)
-    if limit > 0:
-        data = data[:limit]
+    data = b.list_deleted_entities(ws, entity_type, start_iso, end_iso, page=page, limit=limit)
     _out(ctx, data, fmt.print_entity_changes)
 
 
@@ -576,13 +570,12 @@ def entities_deleted(ctx, entity_type, start, end, limit, page, page_size, use_j
               help="Entity document type")
 @click.option("--start", required=True, help="Start date (YYYY-MM-DD)")
 @click.option("--end", required=True, help="End date (YYYY-MM-DD)")
-@click.option("--limit", default=0, type=int, help="Max results (0=all)")
 @click.option("--page", default=None, type=int, help="Page number")
-@click.option("--page-size", "page_size", default=None, type=int, help="Page size")
+@click.option("--limit", default=None, type=int, help="Max results per page (1-5000, default 50)")
 @click.option("--json", "use_json", is_flag=True)
 @click.pass_context
 @handle_errors
-def entities_updated(ctx, entity_type, start, end, limit, page, page_size, use_json):
+def entities_updated(ctx, entity_type, start, end, page, limit, use_json):
     """List updated entities in a date range."""
     if use_json:
         ctx.obj["json"] = True
@@ -590,9 +583,7 @@ def entities_updated(ctx, entity_type, start, end, limit, page, page_size, use_j
     ws = _ws(ctx)
     start_iso = parse_date_arg(start) + "T00:00:00Z"
     end_iso = parse_date_arg(end) + "T23:59:59Z"
-    data = b.list_updated_entities(ws, entity_type, start_iso, end_iso, page=page, page_size=page_size)
-    if limit > 0:
-        data = data[:limit]
+    data = b.list_updated_entities(ws, entity_type, start_iso, end_iso, page=page, limit=limit)
     _out(ctx, data, fmt.print_entity_changes)
 
 
