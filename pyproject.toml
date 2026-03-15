@@ -1,0 +1,25 @@
+[project]
+name = "cli-anything-clockify"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1",
+    "requests>=2.31",
+    "rich>=13.7",
+    "python-dateutil>=2.9",
+    "prompt_toolkit>=3.0",
+    "tabulate>=0.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-mock>=3.12", "responses>=0.25", "freezegun>=1.4"]
+
+[project.scripts]
+clockify = "cli_anything.clockify:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["cli_anything*"]

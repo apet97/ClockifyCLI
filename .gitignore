@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+.venv/
+venv/
+.pytest_cache/
+*.pth
+openapi.cleaned.yaml
+openapi.cleaned 2.yaml
+CLAUDE.md
+.DS_Store
